@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db.session import get_session
 from app.models.users import User, Role
-from app.schemas.user import UserCreate, UserRead, Token, UserLogin
+from app.schemas.user import UserCreate, UserRead, Token
 from app.core.security import get_password_hash, verify_password, create_access_token
 
 
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.post("/register", response_model=UserRead)
 async def register_user(
-        user_in: UserCreate,
+        user_in: OAuth2PasswordRequestForm = Depends(UserCreate),  # ЗАМЕНИТЬ НА UserCreate ПЕРЕД ПУБЛИКАЦИЕЙ
         session: AsyncSession = Depends(get_session)
 ):
     """

@@ -6,7 +6,7 @@ from sqlalchemy import select
 
 from app.database.db.session import get_session
 from app.models.users import User
-from app.core.security import SECRET_KEY, ALGORITHM
+from app.core.config import SECRET_KEY, ALGORITHM
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")

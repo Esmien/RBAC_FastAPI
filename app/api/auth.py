@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-# from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db.session import get_session
 from app.models.users import User, Role
-from app.schemas.user import UserCreate, UserRead
-from app.core.security import get_password_hash
+from app.schemas.user import UserCreate, UserRead, Token, UserLogin
+from app.core.security import get_password_hash, verify_password, create_access_token
 
 
 router = APIRouter()
@@ -68,3 +68,37 @@ async def register_user(
     await session.refresh(new_user)
 
     return new_user
+
+@router.post("/login", response_model=Token)
+async def login(
+        form_data: OAuth2PasswordRequestForm = Depends(),
+        session: AsyncSession = Depends(get_session)
+):
+    """
+        Аутентификация пользователя
+
+        Args:
+            form_data (OAuth2PasswordRequestForm): Данные для аутентификации
+            session (AsyncSession): Сессия БД
+
+        Returns:
+            Token: Токен доступа
+    """
+
+    # Проверяем совпадение пароля и наличие пользователя в БД
+    query = (select(User).where(User.email == form_data.username))
+    result = await session.execute(query)
+    user = result.scalar_one_or_none()
+
+    # Если пользователь не найден или пароль не совпадает, выбрасываем 401 ошибку
+    if user is None or not verify_password(form_data.password,
+                                           user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверный логин или пароль"
+        )
+
+    # Создаем токен доступа
+    access_token = create_access_token(data={"sub": str(user.id)})
+
+    return Token(access_token=access_token, token_type="bearer")

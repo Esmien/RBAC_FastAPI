@@ -15,7 +15,7 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db"
 )
 
-engine = create_async_engine(DATABASE_URL, echo=True)
+engine = create_async_engine(DATABASE_URL, echo=False)
 async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
 
 

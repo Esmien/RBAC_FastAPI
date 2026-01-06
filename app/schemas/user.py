@@ -1,5 +1,3 @@
-from operator import eq
-
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
@@ -57,3 +55,24 @@ class UserRead(UserBase):
 
     class Config:
         from_attributes = True
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "user@example.com",
+                    "password": "secret_password"
+                }
+            ]
+        }
+    }
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

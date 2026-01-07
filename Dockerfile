@@ -16,7 +16,3 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 COPY . .
-
-RUN chmod +x scripts/start.sh
-
-CMD ["./scripts/start.sh"]

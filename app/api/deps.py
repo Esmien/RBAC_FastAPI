@@ -56,6 +56,31 @@ async def get_current_user(
         return user
 
 
+async def get_admin_user(
+        current_user: User = Depends(get_current_user)
+) -> User:
+    """
+        Проверяет, является ли пользователь админом
+
+        Args:
+            current_user: текущий пользователь
+
+        Raises:
+            HTTPException: если пользователь не админ
+
+        Returns:
+            User: текущий пользователь с правами админа
+        """
+
+    if current_user.role.name != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Для выполнения этого действия необходимы права администратора",
+        )
+
+    return current_user
+
+
 class PermissionChecker:
     def __init__(self, business_element: str, permission: str):
         self.business_element = business_element

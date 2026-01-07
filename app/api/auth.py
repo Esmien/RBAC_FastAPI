@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_current_user
 from app.database.db.session import get_session
 from app.models.users import User, Role
 from app.schemas.user import UserCreate, UserRead, Token
@@ -13,7 +14,7 @@ router = APIRouter()
 
 @router.post("/register", response_model=UserRead)
 async def register_user(
-        user_in: OAuth2PasswordRequestForm = Depends(UserCreate),  # ЗАМЕНИТЬ НА UserCreate ПЕРЕД ПУБЛИКАЦИЕЙ
+        user_in: UserCreate,
         session: AsyncSession = Depends(get_session)
 ):
     """
@@ -98,7 +99,30 @@ async def login(
             detail="Неверный логин или пароль"
         )
 
+    # Проверяем активность пользователя
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Пользователь не активен",
+        )
+
     # Создаем токен доступа
     access_token = create_access_token(data={"sub": str(user.id)})
 
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.post("/logout")
+async def logout(current_user: User = Depends(get_current_user)):
+    """
+        Выход пользователя из системы
+        Примечание: мы используем JWT, поэтому здесь ничего не делаем
+
+        Args:
+            current_user (User): Текущий пользователь
+
+        Returns:
+            Сообщение об успешном выходе
+        """
+
+    return {"message": "Вы успешно вышли из системы"}

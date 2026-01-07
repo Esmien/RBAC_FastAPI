@@ -108,10 +108,10 @@ async def init_db(session: AsyncSession):
 
     await _create_access_rule_if_not_exists(
         session,
-        role_id=user_role.id,
+        role_id=manager_role.id,
         element_id=users_element.id,
         permissions={
-            "read_all_permissions": False,
+            "read_all_permissions": True,
             "update_all_permissions": False,
             "delete_all_permissions": False,
             "create_permission": False,
@@ -123,10 +123,10 @@ async def init_db(session: AsyncSession):
 
     await _create_access_rule_if_not_exists(
         session,
-        role_id=manager_role.id,
+        role_id=user_role.id,
         element_id=users_element.id,
         permissions={
-            "read_all_permissions": True,
+            "read_all_permissions": False,
             "update_all_permissions": False,
             "delete_all_permissions": False,
             "create_permission": False,

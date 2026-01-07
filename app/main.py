@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
-from app.api import auth, users
+from app.api import auth, users, admin, business_elements
 from app.database.db.session import async_session
 from app.database.init_db import init_db
 
@@ -25,6 +25,8 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(auth.router, prefix="/users", tags=["Пользователи"])
 app.include_router(users.router, prefix="/users", tags=["Пользователи"])
+app.include_router(admin.router, prefix="/admin", tags=["Админка"])
+app.include_router(business_elements.router, prefix="/business-elements", tags=["Бизнес-элементы"])
 
 if __name__ == "__main__":
     uvicorn.run(

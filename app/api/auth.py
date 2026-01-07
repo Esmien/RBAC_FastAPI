@@ -28,7 +28,7 @@ async def register_user(
     """
 
     # Проверка на существование пользователя с таким же email
-    query = (select(User).where(User.email == user_in.email))
+    query = select(User).where(User.email == user_in.email)
     result = await session.execute(query)
 
     if result.scalar_one_or_none() is not None:
@@ -86,7 +86,7 @@ async def login(
     """
 
     # Проверяем совпадение пароля и наличие пользователя в БД
-    query = (select(User).where(User.email == form_data.username))
+    query = select(User).where(User.email == form_data.username)
     result = await session.execute(query)
     user = result.scalar_one_or_none()
 

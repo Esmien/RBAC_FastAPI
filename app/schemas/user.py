@@ -14,7 +14,7 @@ class RoleRead(RoleBase):
 
 class UserBase(BaseModel):
     email: EmailStr
-    name: str  # имя
+    name: str = "Пользователь"  # имя
     surname: str | None = None  # отчество
     last_name: str | None = None  # фамилия
 
@@ -61,16 +61,11 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "email": "user@example.com",
-                    "password": "secret_password"
-                }
-            ]
-        }
-    }
+
+class UserUpdate(BaseModel):
+    name: str | None = None
+    surname: str | None = None
+    last_name: str | None = None
 
 
 class Token(BaseModel):

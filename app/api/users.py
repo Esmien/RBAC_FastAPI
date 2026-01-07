@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.db.session import get_session
-from app.schemas.user import UserRead
+from app.schemas.user import UserRead, UserUpdate
 from app.models.users import User
 from app.api.deps import get_current_user, PermissionChecker
 
@@ -23,6 +23,54 @@ async def get_me(
             UserRead: пользователь
     """
     return current_user
+
+@router.patch("/me", response_model=UserRead)
+async def update_me(
+        user_update: UserUpdate,
+        current_user: User = Depends(get_current_user),
+        session: AsyncSession = Depends(get_session)
+):
+    """
+        Обновление данных текущего пользователя
+
+        Args:
+            user_update: данные для обновления
+            current_user: текущий пользователь
+            session: сессия БД
+
+        Returns:
+            UserRead: обновленный профиль пользователя
+        """
+
+    for key, value in user_update.model_dump(exclude_unset=True).items():
+        if value:
+            setattr(current_user, key, value)
+
+    session.add(current_user)
+    await session.commit()
+    await session.refresh(current_user)
+    return current_user
+
+
+@router.delete("/me")
+async def delete_me(
+        current_user: User = Depends(get_current_user),
+        session: AsyncSession = Depends(get_session)
+):
+    """
+        'Мягкое' удаление пользователя
+
+        Args:
+            current_user: текущий пользователь
+            session: сессия БД
+        Returns:
+            JSON: сообщение об успешном удалении
+        """
+
+    current_user.is_active = False
+    session.add(current_user)
+    await session.commit()
+    return {"message": f"Пользователь {current_user.name} удален"}
 
 @router.get("/users", response_model=list[UserRead])
 async def get_users(

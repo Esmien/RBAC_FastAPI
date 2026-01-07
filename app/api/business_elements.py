@@ -10,8 +10,7 @@ from app.api.deps import get_admin_user
 
 
 router = APIRouter()
-@router.post("/elements", dependencies=[Depends(get_admin_user)], response_model=BusinessElementRead,
-             tags=["Бизнес-элементы"])
+@router.post("/elements", dependencies=[Depends(get_admin_user)], response_model=BusinessElementRead)
 async def create_business_element(
         element_in: BusinessElementCreate,
         session: AsyncSession = Depends(get_session),
@@ -67,3 +66,27 @@ async def create_business_element(
     await session.commit()
 
     return new_element
+
+
+@router.get("/elements", response_model=list[BusinessElementRead])
+async def get_business_elements(
+        session: AsyncSession = Depends(get_session)
+):
+    """
+        Получаем список бизнес-элементов
+
+        Args:
+            session: сессия БД
+
+        Returns:
+            list[BusinessElementRead]: список всех бизнес-элементов
+        """
+
+    query = select(BusinessElement)
+    result = await session.execute(query)
+    elements = result.scalars().all()
+
+    if elements:
+        return elements
+
+    return []

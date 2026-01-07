@@ -81,7 +81,7 @@ async def get_users(
         _: User = Depends(PermissionChecker(business_element="users", permission="read_all_permission"))
 ):
     """
-        Получение списка всех пользователей, доступно только пользователям с разрешением на чтение всех пользователей
+        Получение списка всех пользователей, доступно только пользователям с разрешением на чтение всего
 
         Args:
             session: сессия БД

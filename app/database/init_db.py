@@ -70,15 +70,22 @@ async def init_db(session: AsyncSession):
     user_role = await _get_or_create(session, Role, name="user")
     manager_role = await _get_or_create(session, Role, name="manager")
 
-    # Заполняем пользователей
-    await _get_or_create(
-        session,
-        User,
-        email="admin@admin.com",
-        hashed_password=get_password_hash("admin"),
-        role_id=admin_role.id,
-        name="Admin"
-    )
+    # Заполняем пользователей (админ)
+    query = select(User).filter_by(email="admin@admin.com")
+    result = await session.execute(query)
+    admin_user = result.scalar_one_or_none()
+
+    # Если амин не создан, создаем его
+    if not admin_user:
+        admin_user = User(
+            email="admin@admin.com",
+            hashed_password=get_password_hash("admin"),
+            role_id=admin_role.id,
+            name="Admin"
+        )
+        session.add(admin_user)
+        await session.flush()  # Чтобы получить ID пользователя для дальнейших связей
+        await session.refresh(admin_user)
 
     # Создаем элемент бизнес-логики "users"
     users_element = await _get_or_create(session, BusinessElement, name="users")

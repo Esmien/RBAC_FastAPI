@@ -1,7 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.users import Role
+
+from app.models.users import Role, User
 from app.models.rbac import BusinessElement, AccessRule
+from app.core.security import get_password_hash
 
 
 async def _get_or_create(session: AsyncSession, model, **kwargs):
@@ -67,6 +69,16 @@ async def init_db(session: AsyncSession):
     admin_role = await _get_or_create(session, Role, name="admin")
     user_role = await _get_or_create(session, Role, name="user")
     manager_role = await _get_or_create(session, Role, name="manager")
+
+    # Заполняем пользователей
+    await _get_or_create(
+        session,
+        User,
+        email="admin@admin.com",
+        hashed_password=get_password_hash("admin"),
+        role_id=admin_role.id,
+        name="Admin"
+    )
 
     # Создаем элемент бизнес-логики "users"
     users_element = await _get_or_create(session, BusinessElement, name="users")

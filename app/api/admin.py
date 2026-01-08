@@ -52,17 +52,17 @@ async def create_user(
                 status_code=404,
                 detail=f"Роль с id {role_id} не найдена"
             )
-        else:
-            user_role = await session.execute(select(Role).where(Role.name == "user"))
-            role_obj = user_role.scalar_one_or_none()
+    else:
+        user_role = await session.execute(select(Role).where(Role.name == "user"))
+        role_obj = user_role.scalar_one_or_none()
 
-            # Если роль 'user' не найдена, то возвращаем ошибку сервера, так как она должна быть
-            if not role_obj:
-                raise HTTPException(
-                    status_code=500,
-                    detail="Базовая роль 'user' не найдена"
-                )
-            role_id = role_obj.id
+        # Если роль 'user' не найдена, то возвращаем ошибку сервера, так как она должна быть
+        if not role_obj:
+            raise HTTPException(
+                status_code=500,
+                detail="Базовая роль 'user' не найдена"
+            )
+        role_id = role_obj.id
 
     # Создаем нового пользователя
     new_user = User(
@@ -72,7 +72,7 @@ async def create_user(
         surname=user_in.surname,
         last_name=user_in.last_name,
         role_id=role_id,
-        is_active=True
+        is_active=user_in.is_active
     )
 
     session.add(new_user)

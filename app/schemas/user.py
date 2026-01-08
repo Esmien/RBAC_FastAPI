@@ -34,6 +34,7 @@ class UserRegister(UserBase):
 # Для создания пользователя админом
 class UserCreate(UserRegister):
     role_id: int | None = None
+    is_active: bool = True
 
     model_config = {
         "json_schema_extra": {

@@ -19,17 +19,21 @@ class UserBase(BaseModel):
     last_name: str | None = None  # фамилия
 
 
-class UserCreate(UserBase):
+# Для безопасной регистрации пользователя
+class UserRegister(UserBase):
     password: str = Field(..., min_length=3, max_length=72)
     repeat_password: str = Field(..., min_length=3, max_length=72)
-    role_id: int | None = None
 
     @model_validator(mode="after")
     def check_passwords_match(self):
         if self.password != self.repeat_password:
             raise ValueError("Пароли не совпадают!")
-        else:
-            return self
+        return self
+
+
+# Для создания пользователя админом
+class UserCreate(UserRegister):
+    role_id: int | None = None
 
     model_config = {
         "json_schema_extra": {
@@ -41,7 +45,8 @@ class UserCreate(UserBase):
                     "last_name": "Иванов",
                     "password": "secret_password",
                     "repeat_password": "secret_password",
-                    "role_id": None
+                    "role_id": 2,
+                    "is_active": True,
                 }
             ]
         }

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user
 from app.database.session import get_session
 from app.models.users import User, Role
-from app.schemas.user import UserCreate, UserRead, Token
+from app.schemas.user import UserRead, Token, UserRegister
 from app.core.security import get_password_hash, verify_password, create_access_token
 
 
@@ -14,14 +14,14 @@ router = APIRouter()
 
 @router.post("/register", response_model=UserRead)
 async def register_user(
-        user_in: UserCreate,
+        user_in: UserRegister,
         session: AsyncSession = Depends(get_session)
 ):
     """
         Регистрирует пользователя, назначая ему по умолчанию роль "user"
 
         Args:
-            user_in (UserCreate): Пользователь, которого нужно зарегистрировать
+            user_in (UserRegister): Пользователь, которого нужно зарегистрировать
             session (AsyncSession): Сессия БД
 
         Returns:
@@ -39,19 +39,17 @@ async def register_user(
         )
 
     # Назначаем пользователю роль "user"
-    role_id = user_in.role_id
-    if role_id is None:
-        query_role = (select(Role).where(Role.name == "user"))
-        result_role = await session.execute(query_role)
-        role_obj = result_role.scalar_one_or_none()
+    query_role = (select(Role).where(Role.name == "user"))
+    result_role = await session.execute(query_role)
+    role_obj = result_role.scalar_one_or_none()
 
-        if role_obj is None:
-            role_obj = Role(name="user")
-            session.add(role_obj)
-            await session.commit()
-            await session.refresh(role_obj)
+    if role_obj is None:
+        role_obj = Role(name="user")
+        session.add(role_obj)
+        await session.commit()
+        await session.refresh(role_obj)
 
-        role_id = role_obj.id
+    role_id = role_obj.id
 
     # Создаем нового пользователя, формируем его объект и добавляем в БД
     new_user = User(
@@ -60,7 +58,7 @@ async def register_user(
         name=user_in.name,
         surname=user_in.surname,
         last_name=user_in.last_name,
-        role_id=role_id,
+        role_id=int(str(role_id)),  # чтобы IDE не ругалась
         is_active=True
     )
 

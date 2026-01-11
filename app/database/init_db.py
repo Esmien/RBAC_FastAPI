@@ -67,25 +67,35 @@ async def init_db(session: AsyncSession):
 
     # Заполняем роли
     admin_role = await _get_or_create(session, Role, name="admin")
-    user_role = await _get_or_create(session, Role, name="user")
     manager_role = await _get_or_create(session, Role, name="manager")
+    user_role = await _get_or_create(session, Role, name="user")
 
-    # Заполняем пользователей (админ)
-    query = select(User).filter_by(email="admin@admin.com")
-    result = await session.execute(query)
-    admin_user = result.scalar_one_or_none()
+    # Создаем словарь для быстрого доступа к ролям по имени
+    roles_map = {
+        "admin": admin_role,
+        "manager": manager_role,
+        "user": user_role,
+    }
 
-    # Если админ не создан, создаем его
-    if not admin_user:
-        admin_user = User(
-            email="admin@admin.com",
-            hashed_password=get_password_hash("admin"),
-            role_id=admin_role.id,
-            name="Admin",
-        )
-        session.add(admin_user)
-        await session.flush()
-        await session.refresh(admin_user)
+    # Заполняем пользователей
+    for role_name in ["admin", "manager", "user"]:
+        email = f"{role_name}@{role_name}.com"
+        query = select(User).filter_by(email=email)
+        result = await session.execute(query)
+        existing_user = result.scalar_one_or_none()
+
+        # Если пользователь с такой ролью не создан, создаем его
+        if not existing_user:
+            new_user = User(
+                email=email,
+                hashed_password=get_password_hash(role_name),
+                role_id=roles_map[role_name].id,
+                name=role_name.title(),
+            )
+
+            session.add(new_user)
+            await session.flush()
+            await session.refresh(new_user)
 
     # Создаем элемент бизнес-логики "users"
     users_element = await _get_or_create(session, BusinessElement, name="users")

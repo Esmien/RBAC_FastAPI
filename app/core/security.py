@@ -1,8 +1,29 @@
+import sys
+
 import bcrypt
 from datetime import datetime, timedelta, timezone
-from jose import jwt
 
-from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from fastapi import Depends, HTTPException, status
+from jose import jwt
+from loguru import logger
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import (
+    SECRET_KEY,
+    ALGORITHM,
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    LOGGER_CONFIG,
+)
+from app.models.users import User
+
+
+logger.remove()
+
+logger.add(
+    sys.stderr,
+    **LOGGER_CONFIG,
+)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -68,7 +89,40 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     else:
         expires_time += timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
+    logger.debug(f"Время жизни токена: {expires_time}")
+
     # Добавляем время жизни токена в словарь
     curr_data["exp"] = expires_time
 
     return jwt.encode(curr_data, SECRET_KEY, algorithm=ALGORITHM)
+
+
+async def check_users_creds(email: str, password: str, session: AsyncSession) -> User:
+    """
+    Проверка учетных данных пользователя.
+    Используется при аутентификации и восстановлении пользователя
+
+    Args:
+        email (str): Электронная почта пользователя
+        password (str): Пароль пользователя
+        session (AsyncSession): Сессия SQLAlchemy для выполнения запросов к базе данных
+
+    Raises:
+        HTTPException: Если учетные данные неверны, выбрасывается ошибка 401.
+
+    Returns:
+        User: Объект пользователя, если учетные данные верны.
+    """
+    # Проверяем совпадение пароля и наличие пользователя в БД
+    query = select(User).where(User.email == email)
+    result = await session.execute(query)
+    user = result.scalar_one_or_none()
+
+    # Если пользователь не найден или пароль не совпадает, выбрасываем 401 ошибку
+    if user is None or not verify_password(password, user.hashed_password):
+        logger.error(f"Неверный логин или пароль: {email}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный логин или пароль"
+        )
+
+    return user

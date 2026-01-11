@@ -17,7 +17,7 @@ async def test_register_user(ac: AsyncClient):
 
     response = await ac.post("/users/register", json=user_data)
 
-    assert response.status_code == 200
+    assert response.status_code == 201
 
     data = response.json()
 

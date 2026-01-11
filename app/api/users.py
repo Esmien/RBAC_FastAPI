@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -11,7 +11,12 @@ from app.api.deps import get_current_user, PermissionChecker
 router = APIRouter()
 
 
-@router.get("/me", response_model=UserRead)
+@router.get(
+    "/me",
+    response_model=UserRead,
+    status_code=status.HTTP_200_OK,
+    summary="Получение информации о текущем пользователе",
+)
 async def get_me(current_user: User = Depends(get_current_user)):
     """
     Проверка текущего пользователя
@@ -24,7 +29,12 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.patch("/me", response_model=UserRead)
+@router.patch(
+    "/me",
+    response_model=UserRead,
+    status_code=status.HTTP_200_OK,
+    summary="Обновление данных текущего пользователя",
+)
 async def update_me(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user),
@@ -53,7 +63,11 @@ async def update_me(
     return current_user
 
 
-@router.delete("/me")
+@router.delete(
+    "/me",
+    status_code=status.HTTP_200_OK,
+    summary="'Мягкое' удаление текущего пользователя",
+)
 async def delete_me(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
@@ -75,7 +89,12 @@ async def delete_me(
     return {"message": f"Пользователь {current_user.name} удален"}
 
 
-@router.get("/users", response_model=list[UserRead])
+@router.get(
+    "/users",
+    response_model=list[UserRead],
+    status_code=status.HTTP_200_OK,
+    summary="Получение списка всех пользователей",
+)
 async def get_users(
     session: AsyncSession = Depends(get_session),
     _: User = Depends(

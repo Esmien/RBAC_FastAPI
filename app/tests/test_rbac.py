@@ -16,12 +16,12 @@ async def test_rbac(ac: AsyncClient, setup_db):
     element_name = "test_element"
 
     response = await ac.post(
-        "/business-elements/elements",
+        "/business-elements/elements/create",
         headers={"Authorization": f"Bearer {token}"},
         json={"name": element_name},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["name"] == element_name
 
 
@@ -38,7 +38,7 @@ async def test_user_cannot_create_business_element(ac: AsyncClient, setup_db):
     element_name = "test_element"
 
     response = await ac.post(
-        "/business-elements/elements",
+        "/business-elements/elements/create",
         headers={"Authorization": f"Bearer {token}"},
         json={"name": element_name},
     )

@@ -97,15 +97,9 @@ async def init_db(session: AsyncSession):
             await session.flush()
             await session.refresh(new_user)
 
-    # Создаем элемент бизнес-логики "users"
-    users_element = await _get_or_create(session, BusinessElement, name="users")
-
-    # Заполняем права доступа (админ, пользователь, менеджер)
-    await _create_access_rule_if_not_exists(
-        session,
-        role_id=admin_role.id,
-        element_id=users_element.id,
-        permissions={
+    # Создаем словарь для быстрого доступа к правам доступа по имени роли
+    permissions_map = {
+        "admin": {
             "read_all_permission": True,
             "update_all_permission": True,
             "delete_all_permission": True,
@@ -114,28 +108,16 @@ async def init_db(session: AsyncSession):
             "update_permission": True,
             "delete_permission": True,
         },
-    )
-
-    await _create_access_rule_if_not_exists(
-        session,
-        role_id=manager_role.id,
-        element_id=users_element.id,
-        permissions={
+        "manager": {
             "read_all_permission": True,
             "update_all_permission": False,
             "delete_all_permission": False,
-            "create_permission": False,
+            "create_permission": True,
             "read_permission": True,
-            "update_permission": False,
+            "update_permission": True,
             "delete_permission": False,
         },
-    )
-
-    await _create_access_rule_if_not_exists(
-        session,
-        role_id=user_role.id,
-        element_id=users_element.id,
-        permissions={
+        "user": {
             "read_all_permission": False,
             "update_all_permission": False,
             "delete_all_permission": False,
@@ -144,6 +126,34 @@ async def init_db(session: AsyncSession):
             "update_permission": False,
             "delete_permission": False,
         },
+    }
+    # Создаем элементы бизнес-логики
+    users_element = await _get_or_create(session, BusinessElement, name="users")
+    business_element = await _get_or_create(
+        session, BusinessElement, name="business_elements"
     )
+
+    # Заполняем права доступа (админ, пользователь, менеджер)
+    for element in [users_element, business_element]:
+        await _create_access_rule_if_not_exists(
+            session,
+            role_id=admin_role.id,
+            element_id=element.id,
+            permissions=permissions_map["admin"],
+        )
+
+        await _create_access_rule_if_not_exists(
+            session,
+            role_id=manager_role.id,
+            element_id=element.id,
+            permissions=permissions_map["manager"],
+        )
+
+        await _create_access_rule_if_not_exists(
+            session,
+            role_id=user_role.id,
+            element_id=element.id,
+            permissions=permissions_map["user"],
+        )
 
     await session.commit()

@@ -4,22 +4,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_session
 from app.schemas.admin import BusinessElementCreate, BusinessElementRead
-from app.models.users import Role
+from app.models.users import Role, User
 from app.models.rbac import BusinessElement, AccessRule
-from app.api.deps import get_admin_user
-
+from app.api.deps import get_admin_user, PermissionChecker
 
 router = APIRouter()
 
 
 @router.post(
     "/elements",
-    dependencies=[Depends(get_admin_user)],
     response_model=BusinessElementRead,
 )
 async def create_business_element(
     element_in: BusinessElementCreate,
     session: AsyncSession = Depends(get_session),
+    _: User = Depends(PermissionChecker("business_elements", "create_permission")),
 ):
     """
     Создаем новый бизнес-элемент
@@ -27,6 +26,7 @@ async def create_business_element(
     Args:
         element_in: данные для создания элемента
         session: сессия БД
+        _: текущий пользователь, проверка прав доступа
 
     Returns:
         BusinessElementRead: созданный элемент
@@ -74,12 +74,16 @@ async def create_business_element(
 
 
 @router.get("/elements", response_model=list[BusinessElementRead])
-async def get_business_elements(session: AsyncSession = Depends(get_session)):
+async def get_business_elements(
+        session: AsyncSession = Depends(get_session),
+        _: User = Depends(PermissionChecker("business_elements", "read_all_permission")),
+):
     """
     Получаем список бизнес-элементов
 
     Args:
         session: сессия БД
+        _: текущий пользователь, проверка прав доступа
 
     Returns:
         list[BusinessElementRead]: список всех бизнес-элементов

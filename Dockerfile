@@ -17,4 +17,4 @@ RUN pip install --upgrade pip && \
 
 COPY . .
 
-#CMD ["python", "-m", "app.main"]
+CMD ["python", "-m", "app.main"]

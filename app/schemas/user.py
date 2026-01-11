@@ -40,7 +40,7 @@ class UserRegister(UserBase):
         return self
 
 
-class UserRestore(BaseModel):
+class UserChangeStatus(BaseModel):
     message: str
     user: UserRead
 

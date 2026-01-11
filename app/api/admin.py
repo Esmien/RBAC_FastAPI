@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, status
+from loguru import logger
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
 from app.database.session import get_session
-from app.schemas.user import UserRead, UserCreate
+from app.schemas.user import UserRead, UserCreate, UserChangeStatus
 from app.schemas.admin import AccessRuleUpdate, UserRoleUpdate
 from app.models.users import User, Role
 from app.models.rbac import AccessRule
-from app.api.deps import get_admin_user
-
+from app.api.deps import get_admin_user, get_user_by_id
 
 router = APIRouter()
 
@@ -81,8 +81,84 @@ async def create_user(
     return new_user
 
 
+@router.delete(
+    "/users/soft_delete/{user_id}",
+    dependencies=[Depends(get_admin_user)],
+    status_code=status.HTTP_200_OK,
+    response_model=UserRead,
+)
+async def soft_delete_user(
+    user_id: int,
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Удаление пользователя
+
+    Args:
+        user_id: id пользователя для удаления
+        session: сессия БД
+
+    Returns:
+        UserRead: Удаленный пользователь
+    """
+
+    user = await get_user_by_id(user_id, session)
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Пользователь уже удален"
+        )
+
+    user.is_active = False
+
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    return user
+
+
+@router.delete(
+    "/users/total_delete/{user_id}",
+    dependencies=[Depends(get_admin_user)],
+    status_code=status.HTTP_200_OK,
+    response_model=UserChangeStatus,
+)
+async def total_delete_user(
+    user_id: int,
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Полное удаление пользователя
+
+    Args:
+        user_id: id пользователя для удаления
+        session: сессия БД
+
+    Returns:
+    """
+
+    query = delete(User).where(User.id == user_id).returning(User)
+    result = await session.execute(query)
+    deleted_user = result.scalar_one_or_none()
+
+    if not deleted_user:
+        logger.warning(f"Пользователь с id {user_id} не найден")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Пользователь с id {user_id} не найден",
+        )
+
+    logger.info(f"Пользователь с id {user_id} удален")
+    await session.commit()
+
+    return UserChangeStatus(
+        message=f"Пользователь с id {user_id} удален", user=deleted_user
+    )
+
+
 @router.patch(
-    "/users/{user_id}/role",
+    "/users/role/{user_id}",
     dependencies=[Depends(get_admin_user)],
     response_model=UserRead,
 )

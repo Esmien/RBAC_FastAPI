@@ -9,7 +9,7 @@ from app.api.deps import get_current_user
 from app.core.config import LOGGER_CONFIG
 from app.database.session import get_session
 from app.models.users import User, Role
-from app.schemas.user import UserRead, Token, UserRegister, UserRestore
+from app.schemas.user import UserRead, Token, UserRegister, UserChangeStatus
 from app.core.security import get_password_hash, create_access_token, check_users_creds
 
 
@@ -81,7 +81,7 @@ async def register_user(
     return new_user
 
 
-@router.patch("/restore", response_model=UserRestore, status_code=201)
+@router.patch("/restore", response_model=UserChangeStatus, status_code=201)
 async def restore_user(
     form_data: OAuth2PasswordRequestForm = Depends(),
     session: AsyncSession = Depends(get_session),
@@ -97,7 +97,7 @@ async def restore_user(
         HTTPException: Если пользователь не найден (404), уже активен (409) или неверный пароль (401)
 
     Returns:
-        UserRestore: Восстановленный пользователь и сообщение об успешном восстановлении
+        UserChangeStatus: Восстановленный пользователь и сообщение об успешном восстановлении
     """
 
     user = await check_users_creds(form_data.username, form_data.password, session)
@@ -115,7 +115,7 @@ async def restore_user(
     await session.refresh(user)
 
     logger.info(f"Пользователь {user.name} восстановлен")
-    return UserRestore(
+    return UserChangeStatus(
         message=f"Пользователь {user.name} успешно восстановлен", user=user
     )
 

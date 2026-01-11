@@ -112,6 +112,9 @@ async def check_users_creds(
             password (str): Пароль пользователя
             session (AsyncSession): Сессия SQLAlchemy для выполнения запросов к базе данных
 
+        Raises:
+            HTTPException: Если учетные данные неверны, выбрасывается ошибка 401.
+
         Returns:
             User: Объект пользователя, если учетные данные верны.
     """

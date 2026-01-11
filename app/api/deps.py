@@ -2,10 +2,10 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, join
 
 from app.database.session import get_session
-from app.models.users import User
+from app.models.users import User, Role
 from app.models.rbac import AccessRule, BusinessElement
 from app.core.config import SECRET_KEY, ALGORITHM
 
@@ -133,28 +133,20 @@ class PermissionChecker:
             session: сессия базы данных
 
         Raises:
-            HTTPException: если у пользователя нет прав
+            HTTPException: если у пользователя нет прав или нет искомого элемента(403)
         """
 
         # Поиск элемента бизнес-логики и прав доступа
-        query_element = select(BusinessElement).where(
-            BusinessElement.name == self.business_element
-        )
-        result_element = await session.execute(query_element)
-        element = result_element.scalar_one_or_none()
-
-        if not element:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Элемент бизнес-логики не найден",
+        query = (
+            select(AccessRule)
+            .join(BusinessElement)
+            .where(
+                AccessRule.role_id == user.role_id,
+                BusinessElement.name == self.business_element,
             )
-
-        query_rule = select(AccessRule).where(
-            element.id == AccessRule.business_element_id,
-            AccessRule.role_id == user.role_id,
         )
-        result_rule = await session.execute(query_rule)
-        rule = result_rule.scalar_one_or_none()
+        result = await session.execute(query)
+        rule = result.scalar_one_or_none()
 
         if not rule:
             raise HTTPException(

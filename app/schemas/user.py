@@ -19,6 +19,15 @@ class UserBase(BaseModel):
     last_name: str | None = None  # фамилия
 
 
+class UserRead(UserBase):
+    id: int
+    is_active: bool
+    role: RoleRead
+
+    class Config:
+        from_attributes = True
+
+
 # Для безопасной регистрации пользователя
 class UserRegister(UserBase):
     password: str = Field(..., min_length=3, max_length=72)
@@ -29,6 +38,11 @@ class UserRegister(UserBase):
         if self.password != self.repeat_password:
             raise ValueError("Пароли не совпадают!")
         return self
+
+
+class UserRestore(BaseModel):
+    message: str
+    user: UserRead
 
 
 # Для создания пользователя админом
@@ -52,15 +66,6 @@ class UserCreate(UserRegister):
             ]
         }
     }
-
-
-class UserRead(UserBase):
-    id: int
-    is_active: bool
-    role: RoleRead
-
-    class Config:
-        from_attributes = True
 
 
 class UserLogin(BaseModel):

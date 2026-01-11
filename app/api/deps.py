@@ -143,3 +143,4 @@ class PermissionChecker:
             )
 
         return user
+

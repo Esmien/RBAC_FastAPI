@@ -2,6 +2,7 @@ import subprocess
 from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
+from loguru import logger
 
 from app.api import auth, users, admin, business_elements
 from app.database.session import async_session
@@ -32,6 +33,7 @@ app.include_router(
 )
 
 if __name__ == "__main__":
+    logger.info("Запускаю сервер")
     uvicorn.run(
         "app.main:app",
         host=UVI_HOST,

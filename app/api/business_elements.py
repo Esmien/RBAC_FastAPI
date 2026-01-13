@@ -6,7 +6,7 @@ from app.database.session import get_session
 from app.schemas.admin import BusinessElementCreate, BusinessElementRead
 from app.models.users import Role, User
 from app.models.rbac import BusinessElement, AccessRule
-from app.api.deps import get_admin_user, PermissionChecker
+from app.api.deps import PermissionChecker
 
 router = APIRouter()
 
@@ -42,9 +42,7 @@ async def create_business_element(
     result = await session.execute(query)
 
     if result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=400, detail=f"Элемент {element_in.name} уже существует"
-        )
+        raise HTTPException(status_code=400, detail=f"Элемент {element_in.name} уже существует")
 
     # создаем новый элемент
     new_element = BusinessElement(name=element_in.name)

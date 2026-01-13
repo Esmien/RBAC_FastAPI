@@ -97,9 +97,7 @@ async def delete_me(
 )
 async def get_users(
     session: AsyncSession = Depends(get_session),
-    _: User = Depends(
-        PermissionChecker(business_element="users", permission="read_all_permission")
-    ),
+    _: User = Depends(PermissionChecker(business_element="users", permission="read_all_permission")),
 ):
     """
     Получение списка всех пользователей, доступно только пользователям с разрешением на чтение всего

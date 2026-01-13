@@ -9,14 +9,14 @@ from sqlalchemy import text
 
 from app.main import app
 from app.database.session import Base, get_session
-from app.core.config import DATABASE_URL, POSTGRES_DB
+from app.core.config import settings
 from app.database.init_db import init_db
 
 
-TEST_DATABASE_URL = DATABASE_URL.replace(POSTGRES_DB, "test_db_pytest")
+TEST_DATABASE_URL = settings.DATABASE_URL.replace(settings.POSTGRES_DB, "test_db_pytest")
 
 # URL для подключения к системной БД, чтобы создать тестовую
-SYSTEM_DATABASE_URL = DATABASE_URL.replace(POSTGRES_DB, "postgres")
+SYSTEM_DATABASE_URL = settings.DATABASE_URL.replace(settings.POSTGRES_DB, "postgres")
 
 # Создание сессии для тестовой БД
 engine_test = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool)
@@ -93,9 +93,7 @@ async def create_test_database():
 @pytest.fixture(scope="function")
 async def ac() -> AsyncGenerator[AsyncClient, None]:
     """Асинхронный клиент"""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 

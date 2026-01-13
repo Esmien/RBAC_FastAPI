@@ -3,22 +3,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
-import sys
 
 from app.api.deps import get_current_user
-from app.core.config import LOGGER_CONFIG
 from app.database.session import get_session
 from app.models.users import User, Role
 from app.schemas.user import UserRead, Token, UserRegister, UserChangeStatus
 from app.core.security import get_password_hash, create_access_token, check_users_creds
-
-
-logger.remove()
-
-logger.add(
-    sys.stderr,
-    **LOGGER_CONFIG,
-)
 
 
 router = APIRouter()
@@ -31,7 +21,8 @@ router = APIRouter()
     summary="Регистрация пользователя",
 )
 async def register_user(
-    user_in: UserRegister, session: AsyncSession = Depends(get_session)
+    user_in: UserRegister,
+    session: AsyncSession = Depends(get_session),
 ):
     """
     Регистрирует пользователя, назначая ему по умолчанию роль "user"
@@ -74,7 +65,7 @@ async def register_user(
     # Создаем нового пользователя, формируем его объект и добавляем в БД
     new_user = User(
         email=str(user_in.email),
-        hashed_password=get_password_hash(user_in.password),
+        hashed_password=await get_password_hash(user_in.password),
         name=user_in.name,
         surname=user_in.surname,
         last_name=user_in.last_name,
@@ -117,9 +108,7 @@ async def restore_user(
 
     if user.is_active:
         logger.warning(f"Пользователь {user.name} уже активен")
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Пользователь уже активен"
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Пользователь уже активен")
 
     user.is_active = True
 
@@ -128,9 +117,7 @@ async def restore_user(
     await session.refresh(user)
 
     logger.info(f"Пользователь {user.name} восстановлен")
-    return UserChangeStatus(
-        message=f"Пользователь {user.name} успешно восстановлен", user=user
-    )
+    return UserChangeStatus(message=f"Пользователь {user.name} успешно восстановлен", user=user)
 
 
 @router.post(
@@ -172,7 +159,11 @@ async def login(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.post("/logout", status_code=status.HTTP_200_OK, summary="Выход из системы")
+@router.post(
+    "/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Выход из системы",
+)
 async def logout(current_user: User = Depends(get_current_user)):
     """
     Выход пользователя из системы

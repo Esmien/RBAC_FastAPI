@@ -42,9 +42,7 @@ async def create_business_element(
     result = await session.execute(query)
 
     if result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=400, detail=f"Элемент {element_in.name} уже существует"
-        )
+        raise HTTPException(status_code=400, detail=f"Элемент {element_in.name} уже существует")
 
     # создаем новый элемент
     new_element = BusinessElement(name=element_in.name)

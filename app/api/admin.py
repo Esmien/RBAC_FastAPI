@@ -48,9 +48,7 @@ async def create_user(
     result = await session.execute(query)
 
     if result.scalar_one_or_none():
-        raise HTTPException(
-            status_code=400, detail="Пользователь с таким email уже существует"
-        )
+        raise HTTPException(status_code=400, detail="Пользователь с таким email уже существует")
 
     role_id = user_in.role_id
 
@@ -59,24 +57,20 @@ async def create_user(
         role_result = await session.execute(select(Role).where(Role.id == role_id))
 
         if not role_result.scalar_one_or_none():
-            raise HTTPException(
-                status_code=404, detail=f"Роль с id {role_id} не найдена"
-            )
+            raise HTTPException(status_code=404, detail=f"Роль с id {role_id} не найдена")
     else:
         user_role = await session.execute(select(Role).where(Role.name == "user"))
         role_obj = user_role.scalar_one_or_none()
 
         # Если роль 'user' не найдена, то возвращаем ошибку сервера, так как она должна быть
         if not role_obj:
-            raise HTTPException(
-                status_code=500, detail="Базовая роль 'user' не найдена"
-            )
+            raise HTTPException(status_code=500, detail="Базовая роль 'user' не найдена")
         role_id = role_obj.id
 
     # Создаем нового пользователя
     new_user = User(
         email=str(user_in.email),
-        hashed_password=get_password_hash(user_in.password),
+        hashed_password=await get_password_hash(user_in.password),
         name=user_in.name,
         surname=user_in.surname,
         last_name=user_in.last_name,
@@ -119,9 +113,7 @@ async def soft_delete_user(
     user = await get_user_by_id(user_id, session)
 
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Пользователь уже удален"
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Пользователь уже удален")
 
     user.is_active = False
 
@@ -171,9 +163,7 @@ async def total_delete_user(
     logger.info(f"Пользователь с id {user_id} удален")
     await session.commit()
 
-    return UserChangeStatus(
-        message=f"Пользователь с id {user_id} удален", user=deleted_user
-    )
+    return UserChangeStatus(message=f"Пользователь с id {user_id} удален", user=deleted_user)
 
 
 @router.patch(
@@ -256,9 +246,7 @@ async def update_access_rule(
     """
 
     # Проверяем, существует ли правило доступа
-    query = select(AccessRule).where(
-        AccessRule.role_id == role_id, AccessRule.business_element_id == element_id
-    )
+    query = select(AccessRule).where(AccessRule.role_id == role_id, AccessRule.business_element_id == element_id)
     result = await session.execute(query)
     rule = result.scalar_one_or_none()
 

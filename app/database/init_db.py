@@ -60,9 +60,7 @@ async def _create_access_rule_if_not_exists(
 
     # Если правило не существует, создаем его и добавляем в сессию
     if rule is None:
-        rule = AccessRule(
-            role_id=role_id, business_element_id=element_id, **permissions
-        )
+        rule = AccessRule(role_id=role_id, business_element_id=element_id, **permissions)
         session.add(rule)
 
 
@@ -92,7 +90,7 @@ async def init_db(session: AsyncSession):
         if not existing_user:
             new_user = User(
                 email=email,
-                hashed_password=get_password_hash(role_name),
+                hashed_password=await get_password_hash(role_name),
                 role_id=roles_map[role_name].id,
                 name=role_name.title(),
             )
@@ -133,9 +131,7 @@ async def init_db(session: AsyncSession):
     }
     # Создаем элементы бизнес-логики
     users_element = await _get_or_create(session, BusinessElement, name="users")
-    business_element = await _get_or_create(
-        session, BusinessElement, name="business_elements"
-    )
+    business_element = await _get_or_create(session, BusinessElement, name="business_elements")
 
     # Заполняем права доступа (админ, пользователь, менеджер)
     for element in [users_element, business_element]:

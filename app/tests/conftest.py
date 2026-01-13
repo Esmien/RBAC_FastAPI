@@ -13,9 +13,7 @@ from app.core.config import settings
 from app.database.init_db import init_db
 
 
-TEST_DATABASE_URL = settings.DATABASE_URL.replace(
-    settings.POSTGRES_DB, "test_db_pytest"
-)
+TEST_DATABASE_URL = settings.DATABASE_URL.replace(settings.POSTGRES_DB, "test_db_pytest")
 
 # URL для подключения к системной БД, чтобы создать тестовую
 SYSTEM_DATABASE_URL = settings.DATABASE_URL.replace(settings.POSTGRES_DB, "postgres")
@@ -95,9 +93,7 @@ async def create_test_database():
 @pytest.fixture(scope="function")
 async def ac() -> AsyncGenerator[AsyncClient, None]:
     """Асинхронный клиент"""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
 
 

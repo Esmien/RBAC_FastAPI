@@ -6,12 +6,13 @@ from jose import jwt
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.concurrency import run_in_threadpool
 
 from app.core.config import settings
 from app.models.users import User
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+async def verify_password(plain_password, hashed_password):
     """
     Проверяет, совпадает ли пароль с хешем
 
@@ -25,12 +26,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
     # Превращаем пароль в набор байтов
     password_bytes = plain_password.encode("utf-8")
+    # Превращаем хеш пароля в набор байтов
+    hashed_password_bytes = hashed_password.encode("utf-8")
 
     # Проверяем, совпадает ли пароль с хешем
-    return bcrypt.checkpw(password_bytes, hashed_password.encode("utf-8"))
+    return await run_in_threadpool(bcrypt.checkpw, password_bytes, hashed_password_bytes)
 
 
-def get_password_hash(password: str) -> str:
+async def get_password_hash(password: str) -> str:
     """
     Генерирует хеш пароля
 
@@ -46,7 +49,7 @@ def get_password_hash(password: str) -> str:
 
     # Генерируем соль
     salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(password_bytes, salt)
+    hashed_password = await run_in_threadpool(bcrypt.hashpw, password_bytes, salt)
 
     # Возвращаем хеш в виде строки
     return hashed_password.decode("utf-8")
@@ -104,10 +107,8 @@ async def check_users_creds(email: str, password: str, session: AsyncSession) ->
     user = result.scalar_one_or_none()
 
     # Если пользователь не найден или пароль не совпадает, выбрасываем 401 ошибку
-    if user is None or not verify_password(password, user.hashed_password):
+    if user is None or not await verify_password(password, user.hashed_password):
         logger.error(f"Неверный логин или пароль: {email}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный логин или пароль"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Неверный логин или пароль")
 
     return user

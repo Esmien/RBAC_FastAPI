@@ -15,9 +15,7 @@ class AccessRule(Base):
     __tablename__ = "access_rules"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    business_element_id: Mapped[int] = mapped_column(
-        ForeignKey("business_elements.id"), nullable=False
-    )
+    business_element_id: Mapped[int] = mapped_column(ForeignKey("business_elements.id"), nullable=False)
     business_element: Mapped[BusinessElement] = relationship(backref="access_rules")
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
     role = relationship("Role")

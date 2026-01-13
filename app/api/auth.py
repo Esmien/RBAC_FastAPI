@@ -65,7 +65,7 @@ async def register_user(
     # Создаем нового пользователя, формируем его объект и добавляем в БД
     new_user = User(
         email=str(user_in.email),
-        hashed_password=get_password_hash(user_in.password),
+        hashed_password=await get_password_hash(user_in.password),
         name=user_in.name,
         surname=user_in.surname,
         last_name=user_in.last_name,
@@ -108,9 +108,7 @@ async def restore_user(
 
     if user.is_active:
         logger.warning(f"Пользователь {user.name} уже активен")
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail="Пользователь уже активен"
-        )
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Пользователь уже активен")
 
     user.is_active = True
 
@@ -119,9 +117,7 @@ async def restore_user(
     await session.refresh(user)
 
     logger.info(f"Пользователь {user.name} восстановлен")
-    return UserChangeStatus(
-        message=f"Пользователь {user.name} успешно восстановлен", user=user
-    )
+    return UserChangeStatus(message=f"Пользователь {user.name} успешно восстановлен", user=user)
 
 
 @router.post(

@@ -50,9 +50,7 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(auth.router, prefix="/users", tags=["Пользователи"])
 app.include_router(users.router, prefix="/users", tags=["Пользователи"])
 app.include_router(admin.router, prefix="/admin", tags=["Админка"])
-app.include_router(
-    business_elements.router, prefix="/business-elements", tags=["Бизнес-элементы"]
-)
+app.include_router(business_elements.router, prefix="/business-elements", tags=["Бизнес-элементы"])
 
 if __name__ == "__main__":
     logger.info("Запускаю сервер")

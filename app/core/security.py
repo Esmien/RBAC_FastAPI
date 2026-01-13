@@ -9,21 +9,8 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import (
-    SECRET_KEY,
-    ALGORITHM,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    LOGGER_CONFIG,
-)
+from app.core.config import settings
 from app.models.users import User
-
-
-logger.remove()
-
-logger.add(
-    sys.stderr,
-    **LOGGER_CONFIG,
-)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -87,14 +74,14 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     if expires_delta:
         expires_time += expires_delta
     else:
-        expires_time += timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_time += timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     logger.debug(f"Время жизни токена: {expires_time}")
 
     # Добавляем время жизни токена в словарь
     curr_data["exp"] = expires_time
 
-    return jwt.encode(curr_data, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(curr_data, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
 async def check_users_creds(email: str, password: str, session: AsyncSession) -> User:

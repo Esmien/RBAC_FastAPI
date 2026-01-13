@@ -6,7 +6,7 @@ from app.database.session import get_session
 from app.schemas.admin import BusinessElementCreate, BusinessElementRead
 from app.models.users import Role, User
 from app.models.rbac import BusinessElement, AccessRule
-from app.api.deps import get_admin_user, PermissionChecker
+from app.api.deps import PermissionChecker
 
 router = APIRouter()
 

@@ -5,9 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, join
 
 from app.database.session import get_session
-from app.models.users import User, Role
+from app.models.users import User
 from app.models.rbac import AccessRule, BusinessElement
-from app.core.config import SECRET_KEY, ALGORITHM
+from app.core.config import settings
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
@@ -37,7 +37,7 @@ async def get_current_user(
 
     # Декодирование токена
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id = payload.get("sub", None)
         if user_id is None:
             raise credentials_exception

@@ -6,19 +6,10 @@ from loguru import logger
 import sys
 
 from app.api.deps import get_current_user
-from app.core.config import LOGGER_CONFIG
 from app.database.session import get_session
 from app.models.users import User, Role
 from app.schemas.user import UserRead, Token, UserRegister, UserChangeStatus
 from app.core.security import get_password_hash, create_access_token, check_users_creds
-
-
-logger.remove()
-
-logger.add(
-    sys.stderr,
-    **LOGGER_CONFIG,
-)
 
 
 router = APIRouter()

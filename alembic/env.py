@@ -15,13 +15,13 @@ sys.path.append(os.getcwd())
 
 # 2. Импортируем Base и наши Модели
 from app.database.session import Base
-from app.core.config import DATABASE_URL
+from app.core.config import settings
 from app.models.rbac import BusinessElement, AccessRule
 from app.models.users import User, Role
 
 config = context.config
 
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

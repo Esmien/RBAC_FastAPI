@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator, ConfigDict
 
 
 class RoleBase(BaseModel):
@@ -8,15 +8,14 @@ class RoleBase(BaseModel):
 class RoleRead(RoleBase):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserBase(BaseModel):
-    email: EmailStr
-    name: str = "Пользователь"  # имя
-    surname: str | None = None  # отчество
-    last_name: str | None = None  # фамилия
+    email: EmailStr = Field(..., examples=["user@example.com"])
+    name: str = Field(..., examples=["Иван"])  # имя
+    surname: str | None = Field(default=None, examples=["Иванович"])  # отчество
+    last_name: str | None = Field(default=None, examples=["Иванов"])  # фамилия
 
 
 class UserRead(UserBase):
@@ -24,14 +23,15 @@ class UserRead(UserBase):
     is_active: bool
     role: RoleRead
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Для безопасной регистрации пользователя
 class UserRegister(UserBase):
-    password: str = Field(..., min_length=3, max_length=72)
-    repeat_password: str = Field(..., min_length=3, max_length=72)
+    password: str = Field(..., min_length=3, max_length=72, examples=["secret_password"])
+    repeat_password: str = Field(..., min_length=3, max_length=72, examples=["secret_password"])
+
+    model_config = ConfigDict(extra="forbid")
 
     @model_validator(mode="after")
     def check_passwords_match(self):
@@ -47,36 +47,23 @@ class UserChangeStatus(BaseModel):
 
 # Для создания пользователя админом
 class UserCreate(UserRegister):
-    role_id: int | None = None
-    is_active: bool = True
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "email": "user@example.com",
-                    "name": "Иван",
-                    "surname": "Иванович",
-                    "last_name": "Иванов",
-                    "password": "secret_password",
-                    "repeat_password": "secret_password",
-                    "role_id": 2,
-                    "is_active": True,
-                }
-            ]
-        }
-    }
+    role_id: int = Field(..., examples=[3])
+    is_active: bool = Field(default=True, examples=[True])
 
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+    model_config = ConfigDict(extra="forbid")
+
 
 class UserUpdate(BaseModel):
     name: str | None = None
     surname: str | None = None
     last_name: str | None = None
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class Token(BaseModel):

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class RBACPermissions(BaseModel):
@@ -9,3 +9,5 @@ class RBACPermissions(BaseModel):
     update_all_permission: bool | None = None
     delete_permission: bool | None = None
     delete_all_permission: bool | None = None
+
+    model_config = ConfigDict(extra='forbid')

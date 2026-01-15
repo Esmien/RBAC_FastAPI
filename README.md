@@ -44,8 +44,8 @@
 
 1.  **Клонирование репозитория:**
     ```bash
-    git clone https://github.com/Esmien/EffectiveMobile_test
-    cd EffectiveMobile_test
+    git clone https://github.com/Esmien/RBAC_FastAPI
+    cd RBAC_FastAPI
     ```
 
 2.  **Настройка окружения:**
@@ -72,9 +72,18 @@ http://localhost:8000/docs
 
 ### Тестовые данные (создаются автоматически)
 
-**Администратор:**
+1. **Администратор:**
 * Email: `admin@admin.com`
 * Password: `admin`
+
+2. **Менеджер:**
+* Email: `manager@manager.com`
+* Password: `manger`
+
+3. **Пользователь:**
+* Email: `user@user.com`
+* Password: `user`
+
 
 **Роли по умолчанию:**
 * `admin` (полные права)

@@ -78,7 +78,7 @@ http://localhost:8000/docs
 
 2. **Менеджер:**
 * Email: `manager@manager.com`
-* Password: `manger`
+* Password: `manager`
 
 3. **Пользователь:**
 * Email: `user@user.com`
